@@ -40,9 +40,10 @@ async function fetchContent(type: string, id: string) {
       return {
         data: {
           ...profileRes.data,
-          followers_count: followersRes.count || 0,
-          following_count: followingRes.count || 0,
-          works_count: worksRes.count || 0,
+          // DB 컬럼의 카운트를 우선 사용 (앱과 동일)
+          followers_count: profileRes.data.followers_count || 0,
+          following_count: profileRes.data.following_count || 0,
+          works_count: profileRes.data.works_count || 0,
           initial_posts: postsRes.data || [],
           initial_lists: listsRes.data || [],
           initial_archives: archivesRes.data || []
