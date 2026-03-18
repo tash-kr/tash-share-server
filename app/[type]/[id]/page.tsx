@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { Metadata } from "next";
+import ProfileView from "../../components/ProfileView";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -21,7 +22,32 @@ async function fetchContent(type: string, id: string) {
     } else if (type === "post") {
       query = supabase.from("posts").select("*, profiles(*), works(*)").eq("id", decodedId);
     } else if (type === "profile") {
-      query = supabase.from("profiles").select("*").eq("id", decodedId);
+      // 프로필 고도화: 통계 및 탭 데이터 멀티 페칭
+      const profilePromise = supabase.from("profiles").select("*").eq("id", decodedId).single();
+      const followersPromise = supabase.from("follows").select("*", { count: 'exact', head: true }).eq("following_id", decodedId);
+      const followingPromise = supabase.from("follows").select("*", { count: 'exact', head: true }).eq("follower_id", decodedId);
+      const worksCountPromise = supabase.from("work_likes").select("*", { count: 'exact', head: true }).eq("user_id", decodedId);
+      const postsPromise = supabase.from("posts").select("*, works(image_url)").eq("user_id", decodedId).order("created_at", { ascending: false }).limit(12);
+      const listsPromise = supabase.from("lists").select("*").eq("user_id", decodedId).order("created_at", { ascending: false }).limit(6);
+      const archivesPromise = supabase.from("work_likes").select("*, works(image_url)").eq("user_id", decodedId).order("created_at", { ascending: false }).limit(12);
+
+      const [profileRes, followersRes, followingRes, worksRes, postsRes, listsRes, archivesRes]: any = await Promise.all([
+        profilePromise, followersPromise, followingPromise, worksCountPromise, postsPromise, listsPromise, archivesPromise
+      ]);
+
+      if (profileRes.error) return { data: null, error: profileRes.error };
+
+      return {
+        data: {
+          ...profileRes.data,
+          followers_count: followersRes.count || 0,
+          following_count: followingRes.count || 0,
+          works_count: worksRes.count || 0,
+          initial_posts: postsRes.data || [],
+          initial_lists: listsRes.data || [],
+          initial_archives: archivesRes.data || []
+        }
+      };
     } else if (type === "artist") {
       query = supabase.from("artists").select("*").eq("id", decodedId);
     } else if (type === "list") {
@@ -104,7 +130,7 @@ export default async function SharePage({ params }: { params: Promise<{ type: st
         {/* Render based on content type */}
         {type === 'work' && <WorkLayout data={data} />}
         {type === 'post' && <PostLayout data={data} />}
-        {type === 'profile' && <ProfileLayout data={data} />}
+        {type === 'profile' && <ProfileView data={data} />}
         {type === 'artist' && <ArtistLayout data={data} />}
         {type === 'list' && <ListLayout data={data} />}
       </main>
@@ -162,19 +188,6 @@ function PostLayout({ data }: { data: any }) {
   );
 }
 
-function ProfileLayout({ data }: { data: any }) {
-  return (
-    <div className="flex flex-col items-center py-12">
-      <img src={data.avatar_url || 'https://tash.kr/logo.png'} className="w-32 h-32 rounded-full border-2 border-gray-50 object-cover mb-6 shadow-xl" />
-      <h2 className="text-2xl font-black mb-4">{data.username}</h2>
-      {data.bio && (
-        <p className="text-center text-gray-600 leading-relaxed max-w-sm px-6 text-[15px]">
-          {data.bio}
-        </p>
-      )}
-    </div>
-  );
-}
 
 function ArtistLayout({ data }: { data: any }) {
     const imageUrl = data.profile_path ? `https://image.tmdb.org/t/p/w500${data.profile_path}` : 'https://tash.kr/logo.png';
