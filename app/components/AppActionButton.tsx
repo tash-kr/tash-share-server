@@ -6,7 +6,7 @@ export default function AppActionButton({ type, id }: { type: string, id: string
     
     // 플랫폼별 스토어 주소 (TASH 앱 정보)
     const playStoreUrl = `https://play.google.com/store/apps/details?id=com.MAL.tash`;
-    const appStoreUrl = `https://apps.apple.com/app/tash/id6739932159`; // TODO: 정확한 iOS App ID 확인 필요
+    const appStoreUrl = `https://apps.apple.com/app/tash/id6755390469`;
     
     const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent.toLowerCase() : '';
     const isAndroid = /android/.test(userAgent);
