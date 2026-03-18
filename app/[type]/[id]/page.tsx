@@ -12,16 +12,16 @@ async function fetchContent(type: string, id: string) {
     if (type === "work") {
       query = supabase.from("works").select("work_title, image_url, biography, artist_name, display_artist_name").eq("id", id);
     } else if (type === "post") {
-      // 명시적 Join: profiles(user_id), works(work_id)
-      query = supabase.from("posts").select("content, profiles:user_id(username, avatar_url), works:work_id(work_title, image_url, artist_name)").eq("id", id);
+      // ⚠️ 주의: profiles, works 테이블명 그대로 사용 (FK 관계에 따라 자동 매핑)
+      query = supabase.from("posts").select("content, profiles(username, avatar_url), works(work_title, image_url, artist_name)").eq("id", id);
     } else if (type === "profile") {
       query = supabase.from("profiles").select("username, avatar_url, bio").eq("id", id);
     } else if (type === "artist") {
       query = supabase.from("artists").select("name, profile_path, biography").eq("id", id);
     } else if (type === "list") {
-      query = supabase.from("lists").select("title, cover_url, profiles:user_id(username)").eq("id", id);
+      query = supabase.from("lists").select("title, cover_url, profiles(username)").eq("id", id);
     } else {
-      return { data: null, error: "Invalid Type" };
+      return { data: null, error: `Invalid Type: ${type}` };
     }
     
     const { data, error } = await query.maybeSingle();
@@ -31,8 +31,8 @@ async function fetchContent(type: string, id: string) {
   }
 }
 
-export async function generateMetadata({ params }: { params: { type: string; id: string } }): Promise<Metadata> {
-  const { type, id } = params;
+export async function generateMetadata({ params }: { params: Promise<{ type: string; id: string }> }): Promise<Metadata> {
+  const { type, id } = await params;
   const { data }: any = await fetchContent(type, id);
   // ... (기존 메타데이터 로직은 유지)
 
@@ -73,8 +73,8 @@ export async function generateMetadata({ params }: { params: { type: string; id:
   };
 }
 
-export default async function SharePage({ params }: { params: { type: string; id: string } }) {
-  const { type, id } = params;
+export default async function SharePage({ params }: { params: Promise<{ type: string; id: string }> }) {
+  const { type, id } = await params;
   const { data, error }: any = await fetchContent(type, id);
 
   if (!data) {
