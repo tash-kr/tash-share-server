@@ -121,10 +121,8 @@ export default async function SharePage({ params }: { params: Promise<{ type: st
   return (
     <div className="min-h-screen bg-white text-black font-sans pb-24">
       {/* Dynamic Header */}
-      <header className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-md flex items-center px-4 z-50 border-b border-gray-50">
-        <div className="w-10 h-10 flex items-center justify-center">
-            <img src="https://tash.kr/logo.png" className="w-6 opacity-80" alt="TASH" />
-        </div>
+      <header className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-md flex items-center px-6 z-50 border-b border-gray-50">
+        <span className="font-black text-[18px] tracking-tight text-black">TASH</span>
       </header>
 
       <main className="pt-14 px-5 max-w-2xl mx-auto">
@@ -137,8 +135,15 @@ export default async function SharePage({ params }: { params: Promise<{ type: st
       </main>
 
       {/* Floating CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-white via-white/90 to-transparent flex justify-center">
-        <a href={`tash://${type}/${id}`} className="w-full max-w-md py-4 bg-black text-white rounded-2xl font-bold text-center shadow-2xl transition-transform active:scale-95">
+      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-white via-white to-white flex justify-center border-t border-gray-50">
+        <a 
+          href={`tash://${type}/${id}`} 
+          className="w-full max-w-md py-4 bg-black text-white rounded-2xl font-bold text-[16px] text-center shadow-lg transition-transform active:scale-95"
+          onClick={(e) => {
+            // Force direct navigation if normal click fails in some contexts
+            window.location.href = `tash://${type}/${id}`;
+          }}
+        >
           앱에서 열기
         </a>
       </div>
