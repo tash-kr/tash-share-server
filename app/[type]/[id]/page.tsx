@@ -123,7 +123,7 @@ export default async function SharePage({ params }: { params: Promise<{ type: st
     <div className="min-h-screen bg-white text-black font-sans pb-24">
       {/* Dynamic Header */}
       <header className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-md flex items-center px-6 z-50 border-b border-gray-50">
-        <span className="font-black text-[18px] tracking-tight text-black">TASH</span>
+        <img src="/icons/app_logo.png" className="h-6 object-contain" alt="TASH" />
       </header>
 
       <main className="pt-14 px-5 max-w-2xl mx-auto">
@@ -145,7 +145,7 @@ function WorkLayout({ data }: { data: any }) {
   return (
     <div className="flex flex-col items-center py-8">
       <div className="w-[73%] aspect-[2/3] mb-8 relative">
-        <img src={data.image_url} className="w-full h-full object-cover rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100" />
+        <img src={data.image_url} className="w-full h-full object-cover rounded-2xl border border-gray-100" />
       </div>
       <h2 className="text-2xl font-black mb-1 text-center px-4 leading-tight">{data.work_title}</h2>
       <p className="text-gray-500 font-semibold mb-8">{data.display_artist_name || data.artist_name || "TASH"}</p>
@@ -163,13 +163,13 @@ function PostLayout({ data }: { data: any }) {
     <div className="py-6">
       {/* Profile Header */}
       <div className="flex items-center mb-6">
-        <img src={data.profiles?.avatar_url || 'https://tash.kr/logo.png'} className="w-10 h-10 rounded-full border border-gray-100 object-cover mr-3" />
+        <img src={data.profiles?.avatar_url || '/icons/default_profile.jpg'} className="w-10 h-10 rounded-full border border-gray-100 object-cover mr-3" />
         <span className="font-bold text-[17px]">{data.profiles?.username}</span>
       </div>
 
       {/* Work Info Box */}
       <div className="bg-[#F8F9FA] rounded-2xl p-4 flex items-center mb-6 border border-gray-100/50">
-        <img src={data.works?.image_url} className="w-14 h-20 rounded-lg object-cover mr-4 shadow-sm" />
+        <img src={data.works?.image_url} className="w-14 h-20 rounded-lg object-cover mr-4 border border-gray-200/30" />
         <div className="flex flex-col">
           <span className="font-bold text-[15px] line-clamp-1 mb-0.5">{data.works?.work_title}</span>
           <span className="text-xs text-gray-400 font-medium">{data.works?.artist_name}</span>
@@ -186,10 +186,10 @@ function PostLayout({ data }: { data: any }) {
 
 
 function ArtistLayout({ data }: { data: any }) {
-    const imageUrl = data.profile_path ? `https://image.tmdb.org/t/p/w500${data.profile_path}` : 'https://tash.kr/logo.png';
+    const imageUrl = data.profile_path ? `https://image.tmdb.org/t/p/w500${data.profile_path}` : '/icons/default_profile.jpg';
     return (
       <div className="flex flex-col items-center py-10">
-        <img src={imageUrl} className="w-40 h-40 rounded-full object-cover mb-8 shadow-xl border-4 border-white" />
+        <img src={imageUrl} className="w-40 h-40 rounded-full object-cover mb-8 border-4 border-white ring-1 ring-gray-100" />
         <h2 className="text-2xl font-black mb-8">{data.name}</h2>
         {data.biography && (
           <div className="w-full text-left bg-gray-50/70 p-7 rounded-[28px] text-gray-700 leading-relaxed tracking-tight whitespace-pre-wrap text-[15px]">
@@ -204,7 +204,7 @@ function ListLayout({ data }: { data: any }) {
     return (
       <div className="flex flex-col items-center py-8">
         <div className="w-48 aspect-square mb-8 relative">
-          <img src={data.cover_url} className="w-full h-full object-cover rounded-3xl shadow-xl border border-gray-50" />
+          <img src={data.cover_url} className="w-full h-full object-cover rounded-3xl border border-gray-50" />
         </div>
         <h2 className="text-2xl font-extrabold mb-2">{data.title}</h2>
         <p className="text-gray-400 text-sm">Created by {data.profiles?.username}</p>

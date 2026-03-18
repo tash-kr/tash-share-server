@@ -11,8 +11,8 @@ export default function ProfileView({ data }: { data: any }) {
       <div className="flex flex-col items-center pt-8 pb-6 px-5 text-center">
         <div className="relative mb-5">
           <img 
-            src={data.avatar_url || 'https://tash.kr/logo.png'} 
-            className="w-[96px] h-[96px] rounded-full object-cover border-[0.5px] border-gray-100 shadow-sm" 
+            src={data.avatar_url || '/icons/default_profile.jpg'} 
+            className="w-[96px] h-[96px] rounded-full object-cover border-2 border-white ring-1 ring-gray-100" 
             alt={data.username}
           />
         </div>
@@ -23,8 +23,8 @@ export default function ProfileView({ data }: { data: any }) {
           </p>
         )}
 
-        {/* Stats Row (Minimal Clean) */}
-        <div className="flex items-center justify-between w-full max-w-[280px] mt-4 mb-4 py-2 px-6 border-y border-gray-50">
+        {/* Stats Row (Extreme Clean - No borders) */}
+        <div className="flex items-center justify-between w-full max-w-[280px] mt-4 mb-4 py-2 px-6">
           <div className="flex flex-col items-center min-w-[60px]">
             <span className="text-[17px] font-black">{data.followers_count}</span>
             <span className="text-[12px] text-gray-400 font-medium">팔로워</span>
@@ -110,17 +110,15 @@ function ListSection({ lists }: { lists: any[] }) {
 
   return (
     <div className="flex flex-col pt-6 px-5 gap-6">
-      {lists.map((list) => (
+      {lists.map((list : any) => (
         <div key={list.id} className="flex items-center group active:opacity-70 transition-opacity pb-6 border-b border-gray-50 last:border-0">
           <img 
-            src={list.cover_url || 'https://tash.kr/logo.png'} 
-            className="w-24 h-24 rounded-[20px] object-cover shadow-sm mr-5 border border-gray-50 bg-gray-50"
+            src={list.cover_url || '/icons/default_profile.jpg'} 
+            className="w-24 h-24 rounded-[20px] object-cover mr-5 border border-gray-50 bg-gray-50"
           />
           <div className="flex flex-col justify-center">
-            <h3 className="text-[17px] font-black mb-1.5 leading-tight">{list.title}</h3>
-            <p className="text-[13px] text-gray-400 font-medium line-clamp-2 leading-relaxed">
-              {list.description || '목록 설명이 없습니다.'}
-            </p>
+            <h3 className="text-[17px] font-black mb-1 leading-tight">{list.title}</h3>
+            <p className="text-[12px] text-gray-400 font-medium">작품 {list.works_count}개</p>
           </div>
         </div>
       ))}
