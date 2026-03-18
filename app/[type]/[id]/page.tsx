@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Metadata } from "next";
 import ProfileView from "../../components/ProfileView";
+import AppActionButton from "../../components/AppActionButton";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -134,19 +135,8 @@ export default async function SharePage({ params }: { params: Promise<{ type: st
         {type === 'list' && <ListLayout data={data} />}
       </main>
 
-      {/* Floating CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-white via-white to-white flex justify-center border-t border-gray-50">
-        <a 
-          href={`tash://${type}/${id}`} 
-          className="w-full max-w-md py-4 bg-black text-white rounded-2xl font-bold text-[16px] text-center shadow-lg transition-transform active:scale-95"
-          onClick={(e) => {
-            // Force direct navigation if normal click fails in some contexts
-            window.location.href = `tash://${type}/${id}`;
-          }}
-        >
-          앱에서 열기
-        </a>
-      </div>
+      {/* Floating CTA (Client Component to handle deep link reliably) */}
+      <AppActionButton type={type} id={id} />
     </div>
   );
 }
