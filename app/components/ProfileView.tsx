@@ -23,18 +23,18 @@ export default function ProfileView({ data }: { data: any }) {
           </p>
         )}
 
-        {/* Stats Row */}
-        <div className="flex items-center justify-between w-full max-w-[280px] mt-2 mb-4 bg-gray-50/50 py-3 px-6 rounded-2xl">
+        {/* Stats Row (Minimal Clean) */}
+        <div className="flex items-center justify-between w-full max-w-[280px] mt-4 mb-4 py-2 px-6 border-y border-gray-50">
           <div className="flex flex-col items-center min-w-[60px]">
             <span className="text-[17px] font-black">{data.followers_count}</span>
             <span className="text-[12px] text-gray-400 font-medium">팔로워</span>
           </div>
-          <div className="w-[1px] h-4 bg-gray-200"></div>
+          <div className="w-[1px] h-4 bg-gray-100"></div>
           <div className="flex flex-col items-center min-w-[60px]">
-            <span className="text-[17px] font-black">{data.following_count}</span>
+             <span className="text-[17px] font-black">{data.following_count}</span>
             <span className="text-[12px] text-gray-400 font-medium">팔로잉</span>
           </div>
-          <div className="w-[1px] h-4 bg-gray-200"></div>
+          <div className="w-[1px] h-4 bg-gray-100"></div>
           <div className="flex flex-col items-center min-w-[60px]">
             <span className="text-[17px] font-black">{data.works_count}</span>
             <span className="text-[12px] text-gray-400 font-medium">작품</span>
@@ -42,8 +42,8 @@ export default function ProfileView({ data }: { data: any }) {
         </div>
       </div>
 
-      {/* Tabs Menu (Icons as requested) */}
-      <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-40 flex h-[54px] border-b border-gray-50 shadow-sm">
+      {/* Tabs Menu (Flat Design, No Shadow) */}
+      <div className="sticky top-14 bg-white/95 backdrop-blur-sm z-40 flex h-[54px] border-b border-gray-50">
         <TabIconButton 
           icon="/icons/tab_posts.png" 
           active={activeTab === 'posts'} 
