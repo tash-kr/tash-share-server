@@ -8,26 +8,33 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function fetchContent(type: string, id: string) {
   try {
+    let query;
     if (type === "work") {
-      return await supabase.from("works").select("work_title, image_url, biography, artist_name, display_artist_name").eq("id", id).maybeSingle();
+      query = supabase.from("works").select("work_title, image_url, biography, artist_name, display_artist_name").eq("id", id);
     } else if (type === "post") {
-      return await supabase.from("posts").select("content, profiles(username, avatar_url), works(work_title, image_url, artist_name)").eq("id", id).maybeSingle();
+      // 명시적 Join: profiles(user_id), works(work_id)
+      query = supabase.from("posts").select("content, profiles:user_id(username, avatar_url), works:work_id(work_title, image_url, artist_name)").eq("id", id);
     } else if (type === "profile") {
-      return await supabase.from("profiles").select("username, avatar_url, bio").eq("id", id).maybeSingle();
+      query = supabase.from("profiles").select("username, avatar_url, bio").eq("id", id);
     } else if (type === "artist") {
-      return await supabase.from("artists").select("name, profile_path, biography").eq("id", id).maybeSingle();
+      query = supabase.from("artists").select("name, profile_path, biography").eq("id", id);
     } else if (type === "list") {
-      return await supabase.from("lists").select("title, cover_url, profiles(username)").eq("id", id).maybeSingle();
+      query = supabase.from("lists").select("title, cover_url, profiles:user_id(username)").eq("id", id);
+    } else {
+      return { data: null, error: "Invalid Type" };
     }
-  } catch (err) {
-    console.error("Fetch Error:", err);
+    
+    const { data, error } = await query.maybeSingle();
+    return { data, error };
+  } catch (err: any) {
+    return { data: null, error: err.message };
   }
-  return { data: null };
 }
 
 export async function generateMetadata({ params }: { params: { type: string; id: string } }): Promise<Metadata> {
   const { type, id } = params;
   const { data }: any = await fetchContent(type, id);
+  // ... (기존 메타데이터 로직은 유지)
 
   let title = "TASH";
   let description = "창작물을 발견하고 기록하는 공간";
@@ -68,9 +75,21 @@ export async function generateMetadata({ params }: { params: { type: string; id:
 
 export default async function SharePage({ params }: { params: { type: string; id: string } }) {
   const { type, id } = params;
-  const { data }: any = await fetchContent(type, id);
+  const { data, error }: any = await fetchContent(type, id);
 
-  if (!data) return <div className="p-20 text-center">정보를 찾을 수 없습니다.</div>;
+  if (!data) {
+    return (
+      <div className="p-20 text-center flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-xl font-bold mb-4">정보를 찾을 수 없습니다.</h1>
+        <div className="text-left bg-gray-100 p-4 rounded-lg text-xs font-mono text-gray-500 max-w-sm overflow-auto">
+          <p>Type: {type}</p>
+          <p>ID: {id}</p>
+          {error && <p className="mt-2 text-red-400">Error: {JSON.stringify(error)}</p>}
+        </div>
+        <a href="/" className="mt-8 text-blue-500 underline">홈으로 이동</a>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-black font-sans pb-24">
