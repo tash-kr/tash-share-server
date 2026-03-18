@@ -10,42 +10,36 @@ const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 async function fetchContent(type: string, id: string) {
-  // 환경 변수 디버깅용
-  const configInfo = `URL: ${SUPABASE_URL ? 'OK' : 'MISSING'}, KEY: ${SUPABASE_ANON_KEY ? 'OK' : 'MISSING'}`;
+  const decodedId = decodeURIComponent(id);
   
   try {
-    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-      return { data: null, error: `Config Missing: ${configInfo}`, configInfo };
-    }
+    if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return { data: null, error: "Config Missing" };
 
     let query;
     if (type === "work") {
-      query = supabase.from("works").select("*").eq("id", id);
+      query = supabase.from("works").select("*").eq("id", decodedId);
     } else if (type === "post") {
-      query = supabase.from("posts").select("*, profiles(*), works(*)").eq("id", id);
+      query = supabase.from("posts").select("*, profiles(*), works(*)").eq("id", decodedId);
     } else if (type === "profile") {
-      query = supabase.from("profiles").select("*").eq("id", id);
+      query = supabase.from("profiles").select("*").eq("id", decodedId);
     } else if (type === "artist") {
-      query = supabase.from("artists").select("*").eq("id", id);
+      query = supabase.from("artists").select("*").eq("id", decodedId);
     } else if (type === "list") {
-      query = supabase.from("lists").select("*, profiles(*)").eq("id", id);
+      query = supabase.from("lists").select("*, profiles(*)").eq("id", decodedId);
     } else {
-      return { data: null, error: `Invalid Type: ${type}`, configInfo };
+      return { data: null, error: `Invalid Type: ${type}` };
     }
     
-    // single()을 써서 데이터가 없으면 에러를 뱉게 함
     const { data, error } = await query.single();
-    return { data, error, configInfo };
+    return { data, error };
   } catch (err: any) {
-    return { data: null, error: err.message, configInfo };
+    return { data: null, error: err.message };
   }
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ type: string; id: string }> }): Promise<Metadata> {
   const { type, id } = await params;
   const { data }: any = await fetchContent(type, id);
-  // ... (기존 메타데이터 로직은 유지)
-  // ... (기존 메타데이터 로직은 유지)
 
   let title = "TASH";
   let description = "창작물을 발견하고 기록하는 공간";
@@ -86,23 +80,12 @@ export async function generateMetadata({ params }: { params: Promise<{ type: str
 
 export default async function SharePage({ params }: { params: Promise<{ type: string; id: string }> }) {
   const { type, id } = await params;
-  const { data, error, configInfo }: any = await fetchContent(type, id);
+  const { data, error }: any = await fetchContent(type, id);
 
   if (!data) {
     return (
       <div className="p-20 text-center flex flex-col items-center justify-center min-h-screen">
         <h1 className="text-xl font-bold mb-4">정보를 찾을 수 없습니다.</h1>
-        <div className="text-left bg-gray-100 p-4 rounded-lg text-xs font-mono text-gray-500 max-w-sm overflow-auto">
-          <p className="font-bold text-black mb-1">[Debug Info]</p>
-          <p>Config: {configInfo}</p>
-          <p>Type: {type}</p>
-          <p>ID: {id}</p>
-          {error && (
-            <div className="mt-2 p-2 bg-red-50 text-red-600 rounded">
-              Error: {typeof error === 'object' ? JSON.stringify(error) : error}
-            </div>
-          )}
-        </div>
         <a href="/" className="mt-8 text-blue-500 underline">홈으로 이동</a>
       </div>
     );
