@@ -9,15 +9,15 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 async function fetchContent(type: string, id: string) {
   try {
     if (type === "work") {
-      return await supabase.from("works").select("title, image_url, biography").eq("id", id).maybeSingle();
+      return await supabase.from("works").select("work_title, image_url, biography, artist_name, display_artist_name").eq("id", id).maybeSingle();
     } else if (type === "post") {
-      return await supabase.from("posts").select("content, profiles(username, avatar_url), works(image_url)").eq("id", id).maybeSingle();
+      return await supabase.from("posts").select("content, profiles(username, avatar_url), works(work_title, image_url, artist_name)").eq("id", id).maybeSingle();
     } else if (type === "profile") {
       return await supabase.from("profiles").select("username, avatar_url, bio").eq("id", id).maybeSingle();
     } else if (type === "artist") {
-      return await supabase.from("artists").select("name, profile_url, biography").eq("id", id).maybeSingle();
+      return await supabase.from("artists").select("name, profile_path, biography").eq("id", id).maybeSingle();
     } else if (type === "list") {
-      return await supabase.from("user_lists").select("title, cover_url").eq("id", id).maybeSingle();
+      return await supabase.from("lists").select("title, cover_url, profiles(username)").eq("id", id).maybeSingle();
     }
   } catch (err) {
     console.error("Fetch Error:", err);
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: { type: string; id:
 
   if (data) {
     if (type === "work") {
-      title = data.title;
+      title = data.work_title;
       image = data.image_url || image;
     } else if (type === "post") {
       title = `${data.profiles?.username || "TASH 유저"}님의 기록`;
@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: { params: { type: string; id:
       image = data.avatar_url || image;
     } else if (type === "artist") {
       title = data.name;
-      image = data.profile_url || image;
+      image = data.profile_path ? `https://image.tmdb.org/t/p/w500${data.profile_path}` : image;
     } else if (type === "list") {
       title = data.title;
       image = data.cover_url || image;
@@ -70,49 +70,116 @@ export default async function SharePage({ params }: { params: { type: string; id
   const { type, id } = params;
   const { data }: any = await fetchContent(type, id);
 
-  let title = "TASH";
-  let description = "창작물을 발견하고 기록하는 공간";
-  let image = "https://tash.kr/logo.png";
-
-  if (data) {
-    if (type === "work") {
-      title = data.title;
-      image = data.image_url || image;
-    } else if (type === "post") {
-      title = `${data.profiles?.username || "TASH 유저"}님의 기록`;
-      description = data.content;
-      image = data.works?.image_url || image;
-    } else if (type === "profile") {
-      title = `${data.username}님의 프로필`;
-      description = data.bio || description;
-      image = data.avatar_url || image;
-    } else if (type === "artist") {
-      title = data.name;
-      image = data.profile_url || image;
-    } else if (type === "list") {
-      title = data.title;
-      image = data.cover_url || image;
-    }
-  }
+  if (!data) return <div className="p-20 text-center">정보를 찾을 수 없습니다.</div>;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-white font-sans">
-      <div className="w-full max-w-md bg-white rounded-3xl p-10 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.04)] text-center">
-        <img src={image} className="w-48 h-48 mx-auto mb-8 rounded-2xl object-cover shadow-lg bg-gray-50" />
-        <h1 className="text-2xl font-bold mb-3 text-black">{title}</h1>
-        <p className="text-gray-500 mb-10 leading-relaxed line-clamp-4">{description}</p>
-        
-        <div className="space-y-4">
-          <a href={`tash://${type}/${id}`} className="block w-full py-5 bg-black text-white rounded-2xl font-semibold transition-transform active:scale-95">
-            앱에서 열기
-          </a>
-          <a href={`https://tash.kr`} className="block text-gray-400 text-sm hover:underline">
-            TASH 설치하기
-          </a>
+    <div className="min-h-screen bg-white text-black font-sans pb-24">
+      {/* Dynamic Header */}
+      <header className="fixed top-0 left-0 right-0 h-14 bg-white/80 backdrop-blur-md flex items-center px-4 z-50 border-b border-gray-50">
+        <div className="w-10 h-10 flex items-center justify-center">
+            <img src="https://tash.kr/logo.png" className="w-6 opacity-80" alt="TASH" />
         </div>
+      </header>
+
+      <main className="pt-14 px-5 max-w-2xl mx-auto">
+        {/* Render based on content type */}
+        {type === 'work' && <WorkLayout data={data} />}
+        {type === 'post' && <PostLayout data={data} />}
+        {type === 'profile' && <ProfileLayout data={data} />}
+        {type === 'artist' && <ArtistLayout data={data} />}
+        {type === 'list' && <ListLayout data={data} />}
+      </main>
+
+      {/* Floating CTA */}
+      <div className="fixed bottom-0 left-0 right-0 p-5 bg-gradient-to-t from-white via-white/90 to-transparent flex justify-center">
+        <a href={`tash://${type}/${id}`} className="w-full max-w-md py-4 bg-black text-white rounded-2xl font-bold text-center shadow-2xl transition-transform active:scale-95">
+          앱에서 열기
+        </a>
       </div>
-      
-      <img src="https://tash.kr/logo.png" className="w-10 opacity-20 mt-12" alt="TASH" />
     </div>
   );
+}
+
+function WorkLayout({ data }: { data: any }) {
+  return (
+    <div className="flex flex-col items-center py-8">
+      <div className="w-[73%] aspect-[2/3] mb-8 relative">
+        <img src={data.image_url} className="w-full h-full object-cover rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.15)] border border-gray-100" />
+      </div>
+      <h2 className="text-2xl font-black mb-1 text-center px-4 leading-tight">{data.work_title}</h2>
+      <p className="text-gray-500 font-semibold mb-8">{data.display_artist_name || data.artist_name || "TASH"}</p>
+      {data.biography && (
+        <div className="w-full text-left bg-gray-50/70 p-7 rounded-[28px] text-gray-700 leading-relaxed tracking-tight whitespace-pre-wrap text-[15px]">
+          {data.biography}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PostLayout({ data }: { data: any }) {
+  return (
+    <div className="py-6">
+      {/* Profile Header */}
+      <div className="flex items-center mb-6">
+        <img src={data.profiles?.avatar_url || 'https://tash.kr/logo.png'} className="w-10 h-10 rounded-full border border-gray-100 object-cover mr-3" />
+        <span className="font-bold text-[17px]">{data.profiles?.username}</span>
+      </div>
+
+      {/* Work Info Box */}
+      <div className="bg-[#F8F9FA] rounded-2xl p-4 flex items-center mb-6 border border-gray-100/50">
+        <img src={data.works?.image_url} className="w-14 h-20 rounded-lg object-cover mr-4 shadow-sm" />
+        <div className="flex flex-col">
+          <span className="font-bold text-[15px] line-clamp-1 mb-0.5">{data.works?.work_title}</span>
+          <span className="text-xs text-gray-400 font-medium">{data.works?.artist_name}</span>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="text-[17px] leading-relaxed whitespace-pre-wrap text-[#1A1A1A] px-1">
+        {data.content}
+      </div>
+    </div>
+  );
+}
+
+function ProfileLayout({ data }: { data: any }) {
+  return (
+    <div className="flex flex-col items-center py-12">
+      <img src={data.avatar_url || 'https://tash.kr/logo.png'} className="w-32 h-32 rounded-full border-2 border-gray-50 object-cover mb-6 shadow-xl" />
+      <h2 className="text-2xl font-black mb-4">{data.username}</h2>
+      {data.bio && (
+        <p className="text-center text-gray-600 leading-relaxed max-w-sm px-6 text-[15px]">
+          {data.bio}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function ArtistLayout({ data }: { data: any }) {
+    const imageUrl = data.profile_path ? `https://image.tmdb.org/t/p/w500${data.profile_path}` : 'https://tash.kr/logo.png';
+    return (
+      <div className="flex flex-col items-center py-10">
+        <img src={imageUrl} className="w-40 h-40 rounded-full object-cover mb-8 shadow-xl border-4 border-white" />
+        <h2 className="text-2xl font-black mb-8">{data.name}</h2>
+        {data.biography && (
+          <div className="w-full text-left bg-gray-50/70 p-7 rounded-[28px] text-gray-700 leading-relaxed tracking-tight whitespace-pre-wrap text-[15px]">
+            {data.biography}
+          </div>
+        )}
+      </div>
+    );
+}
+
+function ListLayout({ data }: { data: any }) {
+    return (
+      <div className="flex flex-col items-center py-8">
+        <div className="w-48 aspect-square mb-8 relative">
+          <img src={data.cover_url} className="w-full h-full object-cover rounded-3xl shadow-xl border border-gray-50" />
+        </div>
+        <h2 className="text-2xl font-extrabold mb-2">{data.title}</h2>
+        <p className="text-gray-400 text-sm">Created by {data.profiles?.username}</p>
+      </div>
+    );
 }
